@@ -1,0 +1,8 @@
+[phases.install]
+cmds = ["cd restaurant-app-backend && npm install"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "node restaurant-app-backend/migrate.js && node restaurant-app-backend/server.js"
