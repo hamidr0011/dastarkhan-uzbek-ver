@@ -10,7 +10,7 @@ const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { login, loginWithGoogleSession, isLoading } = useContext(AuthContext);
+    const { login, loginWithSupabaseGoogle, isLoading } = useContext(AuthContext);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -32,7 +32,7 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const handleGoogleLogin = async () => {
-        const response = await loginWithGoogleSession();
+        const response = await loginWithSupabaseGoogle();
         if (!response.success) {
             Alert.alert('Google Login Failed', response.error);
         }

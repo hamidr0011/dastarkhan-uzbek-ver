@@ -119,6 +119,7 @@ export const registerWithSupabase = async ({ name, email, password, phone, role 
         success: true,
         requiresEmailConfirmation: !payload.session,
         user: payload.user,
+        session: payload.session,
     };
 };
 
@@ -148,7 +149,7 @@ export const loginWithSupabase = async (email, password) => {
     };
 };
 
-export const getGoogleOAuthUrl = () => {
+export const getGoogleOAuthUrl = (customRedirectUrl) => {
     if (!isSupabaseConfigured) {
         throw new Error('Supabase is not configured. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.');
     }
@@ -157,9 +158,11 @@ export const getGoogleOAuthUrl = () => {
         throw new Error('Google sign-in is waiting for Supabase provider setup. Add the Google Client ID and Secret in Supabase Auth, allow dastarkhanuzbekistan://auth/callback, then set EXPO_PUBLIC_GOOGLE_AUTH_ENABLED=true.');
     }
 
+    const redirectUrlToUse = customRedirectUrl || AUTH_REDIRECT_URI;
+
     const params = [
         ['provider', 'google'],
-        ['redirect_to', AUTH_REDIRECT_URI],
+        ['redirect_to', redirectUrlToUse],
         ['scopes', 'email profile'],
     ]
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)

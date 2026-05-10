@@ -46,9 +46,12 @@ const RegisterScreen = ({ navigation }) => {
 
         const result = await register(name, email, password, phone, role, managerCode);
         if (result.success) {
-            Alert.alert('Success', result.requiresEmailConfirmation ? 'Account created. Please confirm your email before logging in.' : 'Registered successfully. You can log in now.', [
-                { text: 'OK', onPress: () => navigation.navigate('Login') }
-            ]);
+            if (result.requiresEmailConfirmation) {
+                Alert.alert('Success', 'Account created. Please confirm your email before logging in.', [
+                    { text: 'OK', onPress: () => navigation.navigate('Login') }
+                ]);
+            }
+            // If email confirmation is not required, user is auto-logged in. No alert needed.
         } else {
             Alert.alert('Error', result.error || 'Registration failed');
         }

@@ -1,6 +1,9 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginWithSupabase, logoutFromSupabase, registerWithSupabase } from '../services/supabaseAuth';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import * as AuthSession from 'expo-auth-session';
+import { loginWithSupabase, logoutFromSupabase, registerWithSupabase, getGoogleOAuthUrl, loginWithOAuthTokens } from '../services/supabaseAuth';
 import { loginWithBetterAuthGoogle, logoutFromBetterAuth } from '../services/betterAuthClient';
 
 export const AuthContext = createContext();
@@ -73,6 +76,45 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginWithSupabaseGoogle = async () => {
+        setIsLoading(true);
+        try {
+            const redirectUrl = AuthSession.makeRedirectUri();
+            const authUrl = getGoogleOAuthUrl(redirectUrl);
+            
+            const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+            
+            if (result.type === 'success' && result.url) {
+                const hash = result.url.split('#')[1] || result.url.split('?')[1];
+                if (!hash) {
+                    return { success: false, error: 'No tokens returned from Google' };
+                }
+                const params = hash.split('&').reduce((acc, current) => {
+                    const [key, value] = current.split('=');
+                    acc[key] = decodeURIComponent(value);
+                    return acc;
+                }, {});
+
+                const accessToken = params.access_token;
+                const refreshToken = params.refresh_token;
+                
+                if (accessToken) {
+                    const response = await loginWithOAuthTokens({ accessToken, refreshToken });
+                    if (response.success) {
+                        await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(response.user));
+                        setUser(response.user);
+                        return { success: true, user: response.user };
+                    }
+                }
+            }
+            return { success: false, error: 'Google login cancelled or failed.' };
+        } catch (error) {
+            return { success: false, error: error.message || 'Google login failed' };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const register = async (name, email, password, phone, role = 'customer', managerCode = '') => {
         setIsLoading(true);
         try {
@@ -81,6 +123,21 @@ export const AuthProvider = ({ children }) => {
             }
 
             const response = await registerWithSupabase({ name, email, password, phone, role });
+            
+            if (!response.requiresEmailConfirmation && response.session) {
+                const sessionUser = {
+                    id: response.user.id,
+                    email: response.user.email,
+                    name: response.user.user_metadata?.name || name,
+                    phone: response.user.user_metadata?.phone || phone,
+                    role: response.user.user_metadata?.role || role,
+                    token: response.session.access_token,
+                    authProvider: 'supabase'
+                };
+                await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+                setUser(sessionUser);
+            }
+
             return {
                 success: true,
                 requiresEmailConfirmation: response.requiresEmailConfirmation,
@@ -93,7 +150,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogleSession, logout, register }}>
+        <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogleSession, loginWithSupabaseGoogle, logout, register }}>
             {children}
         </AuthContext.Provider>
     );
