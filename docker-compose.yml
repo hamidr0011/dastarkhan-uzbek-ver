@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: dastarkhan_db
+    environment:
+      POSTGRES_USER: dastarkhan
+      POSTGRES_PASSWORD: dastarkhan_password
+      POSTGRES_DB: dastarkhan_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./supabase/00-init.sql:/docker-entrypoint-initdb.d/00-init.sql
+      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./restaurant-app-backend
+    container_name: dastarkhan_backend
+    environment:
+      - PORT=5000
+      - DATABASE_URL=postgresql://dastarkhan:dastarkhan_password@db:5432/dastarkhan_db
+      - JWT_SECRET=dastarkhan_jwt_secret_key_2026
+      # Add other environment variables from .env here
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    volumes:
+      - ./restaurant-app-backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: .
+    container_name: dastarkhan_frontend
+    environment:
+      - EXPO_PUBLIC_API_URL=http://192.168.1.17:5001/api
+      - REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.17
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    depends_on:
+      - backend
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  db_data:

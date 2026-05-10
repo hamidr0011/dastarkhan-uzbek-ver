@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: dastarkhan-backend
+    env: docker
+    dockerContext: ./restaurant-app-backend
+    dockerfilePath: ./restaurant-app-backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
