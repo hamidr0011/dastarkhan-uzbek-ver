@@ -9,7 +9,7 @@
 
 The application allows users to register as either customers or managers, browse menus, manage table reservations, place orders, and manage restaurant offerings.
 
----
+--
 
 ## Technical Stack
 ### Frontend
