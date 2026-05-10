@@ -1,6 +1,7 @@
 
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ScrollView } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import { colors } from '../../constants/colors';
 import { theme } from '../../constants/theme';
@@ -88,6 +89,7 @@ const LoginScreen = ({ navigation }) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+                        <AntDesign name="google" size={20} color={colors.text} style={styles.googleIcon} />
                         <Text style={styles.googleButtonText}>Continue with Google</Text>
                     </TouchableOpacity>
 
@@ -160,7 +162,12 @@ const styles = StyleSheet.create({
         borderColor: colors.lightGrey,
         borderRadius: 8,
         paddingVertical: 14,
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
+    },
+    googleIcon: {
+        marginRight: 10,
     },
     googleButtonText: {
         color: colors.text,
